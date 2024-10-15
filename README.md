@@ -38,6 +38,8 @@ Application Quizz Foot
 - **Publicités** : Si tu veux inclure des publicités, tu peux envisager d'utiliser des plateformes comme Google AdMob.
 - **Version gratuite/premium** : Tu pourrais avoir une version gratuite avec les pubs qui apparaissent assez régulièrement, et une version premium sans les pubs (Payement de 3€).
 
+
+
 ## Gérer les autorisations et la sécurité
 - **Gestion des autorisations** : Si ton application nécessite des fonctionnalités comme l'accès à Internet, pense à bien les déclarer dans le fichier de configuration de Flutter (AndroidManifest.xml pour Android et Info.plist pour iOS).
 - **Sécurité des données** : Si tu stockes des données sensibles, comme les résultats des utilisateurs, assure-toi d'utiliser des techniques de cryptage appropriées et de respecter les meilleures pratiques en matière de sécurité des données.
