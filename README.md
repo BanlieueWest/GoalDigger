@@ -33,6 +33,10 @@ Application Quizz Foot
 
 - **Mises à jour des questions** : Si les questions sont mises à jour fréquemment, tu dois réfléchir à la manière de mettre à jour les données sans obliger les utilisateurs à télécharger une nouvelle version de l'application. Si tu utilises Firebase ou un autre service cloud, il est facile de faire des mises à jour sans toucher au code source de l'application.
 
+### Utilisation de DynamoDB 
+
+- https://stackoverflow.com/questions/63987128/connect-flutter-application-to-dynamodb-database
+
 ## Choisir un modèle économique (Monétisation)
 
 - **Publicités** : Si tu veux inclure des publicités, tu peux envisager d'utiliser des plateformes comme Google AdMob.
