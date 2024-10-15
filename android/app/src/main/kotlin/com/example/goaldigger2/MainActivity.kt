@@ -1,0 +1,5 @@
+package com.example.goaldigger2
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity: FlutterActivity()
