@@ -14,10 +14,10 @@ Application Quizz Foot
 ### Stockage des données
 
 - Format de stockage des questions : Comment les questions seront-elles structurées ? Chaque question devrait avoir :
--- Un identifiant unique.
--- Le texte de la question.
--- Quatre réponses possibles.
--- L'indice ou l'identifiant de la bonne réponse.
+- - Un identifiant unique.
+- - Le texte de la question.
+- - Quatre réponses possibles.
+- - L'indice ou l'identifiant de la bonne réponse.
 
 **Exemple de question en JSON**
 ```json
