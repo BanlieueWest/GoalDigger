@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';  // Import du package provider
+import 'package:shared_preferences/shared_preferences.dart';  // Import du package shared_preferences
+import 'package:flutter/material.dart';
+import 'settings.dart';
 import 'page1.dart';
 import 'page2.dart';
 import 'page3.dart';
@@ -9,24 +13,76 @@ void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
+class ThemeNotifier with ChangeNotifier {
+  bool _isDarkMode = false;
+
+  bool get isDarkMode => _isDarkMode;
+
+  // Charger le thème depuis SharedPreferences
+  ThemeNotifier() {
+    _loadFromPrefs();
+  }
+
+  // Activer ou désactiver le mode sombre
+  void toggleTheme() {
+    _isDarkMode = !_isDarkMode;
+    _saveToPrefs();
+    notifyListeners();
+  }
+
+  void setDarkMode(bool value) {
+    _isDarkMode = value;
+    _saveToPrefs();
+    notifyListeners();
+  }
+
+  // Sauvegarder le thème dans SharedPreferences
+  Future<void> _saveToPrefs() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setBool('darkMode', _isDarkMode);
+  }
+
+  // Charger le thème depuis SharedPreferences
+  Future<void> _loadFromPrefs() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    _isDarkMode = prefs.getBool('darkMode') ?? false;
+    notifyListeners();
+  }
 }
 
-class _MyAppState extends State<MyApp> {
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider<ThemeNotifier>(
+      create: (_) => ThemeNotifier(),
+      child: Consumer<ThemeNotifier>(
+        builder: (context, themeNotifier, child) {
+          return MaterialApp(
+            theme: themeNotifier.isDarkMode ? ThemeData.dark() : ThemeData.light(),
+            home: MyHomePage(),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  @override
+  _MyHomePageState createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
 
-  // Liste des pages de l'application
   final List<Widget> _pages = [
     Page1(),
-    Page2(),
-    Page3(),
-    Page4(),
-    Page5(),
+    Center(child: Text("Page 2")),
+    Center(child: Text("Page 3")),
+    Center(child: Text("Page 4")),
+    Center(child: Text("Page 5")),
   ];
 
-  // Méthode pour gérer le changement de page sans recréer la page
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -35,49 +91,43 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.blue[300],
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(Icons.settings, color: Colors.white),
-              Text('Goal Digger', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              SizedBox(width: 24), // Pour équilibrer avec l'icône de gauche
-            ],
-          ),
-        ),
-        body: _pages[_selectedIndex], // Affiche la page sélectionnée
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _selectedIndex, // L'index de la page actuelle
-          onTap: _onItemTapped, // Méthode appelée lors de la sélection
-          type: BottomNavigationBarType.fixed, // Pour éviter les animations sur les labels
-          selectedItemColor: Colors.blue, // Couleur de l'élément actif
-          unselectedItemColor: Colors.grey, // Couleur des éléments non sélectionnés
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.blue[300],
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            IconButton(
+              icon: Icon(Icons.settings, color: Colors.white),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SettingsPage()),  // Remplace 'SettingsPage' par ta page cible
+                );
+              },
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.explore),
-              label: 'Page 2',
+            Text(
+              'Goal Digger',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.favorite),
-              label: 'Page 3',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Page 4',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings),
-              label: 'Page 5',
-            ),
+            SizedBox(width: 20),  // Pour équilibrer avec l'icône de gauche
           ],
         ),
+      ),
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Page 2'),
+          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Page 3'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Page 4'),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Page 5'),
+        ],
       ),
     );
   }
