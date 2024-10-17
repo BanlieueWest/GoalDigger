@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';  // Import du package provider
 import 'package:shared_preferences/shared_preferences.dart';  // Import du package shared_preferences
-import 'package:flutter/material.dart';
 import 'settings.dart';
 import 'page1.dart';
 import 'page2.dart';
 import 'page3.dart';
 import 'page4.dart';
 import 'page5.dart';
+import 'questions_solo.dart'; // Import de la page QuestionSolo
 
 void main() {
   runApp(MyApp());
@@ -77,10 +77,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final List<Widget> _pages = [
     Page1(),
-    Center(child: Text("Page 2")),
-    Center(child: Text("Page 3")),
-    Center(child: Text("Page 4")),
-    Center(child: Text("Page 5")),
+    Page2(),
+    Page3(),
+    Page4(),
+    Page5(),
   ];
 
   void _onItemTapped(int index) {
@@ -92,6 +92,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // En-tête GoalDigger ajouté ici
       appBar: AppBar(
         backgroundColor: Colors.blue[300],
         title: Row(
@@ -107,14 +108,17 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
             Text(
-              'Goal Digger',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              'GoalDigger',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
             ),
-            SizedBox(width: 20),  // Pour équilibrer avec l'icône de gauche
+            SizedBox(width: 50),  // Pour équilibrer avec l'icône de gauche
           ],
         ),
       ),
-      body: _pages[_selectedIndex],
+
+      body: _pages[_selectedIndex], // Afficher la page sélectionnée
+
+      // Barre de navigation inférieure
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
