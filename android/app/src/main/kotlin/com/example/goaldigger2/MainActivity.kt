@@ -1,4 +1,4 @@
-package com.example.goaldigger2
+package com.goaldigger.app
 
 import io.flutter.embedding.android.FlutterActivity
 
