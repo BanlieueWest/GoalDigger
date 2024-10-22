@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "684124894729",
+    "firebase_url": "https://banlieuwest-a97e5-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "banlieuwest-a97e5",
+    "storage_bucket": "banlieuwest-a97e5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:684124894729:android:254c9e96f1a87a2e72aad8",
+        "android_client_info": {
+          "package_name": "com.goaldigger.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCBnPglOswN-hHbe616ditqE21BAP-SpbU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
