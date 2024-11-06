@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'result_page.dart'; // Import de la page des résultats
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:auto_size_text/auto_size_text.dart';
+import 'result_page.dart';
 
 class QuestionSolo extends StatefulWidget {
   @override
@@ -8,87 +10,26 @@ class QuestionSolo extends StatefulWidget {
 }
 
 class _QuestionSoloState extends State<QuestionSolo> {
-  double _progressValue = 1.0; // Commence à 100%
-  int _remainingTime = 10; // 10 secondes pour répondre
+  double _progressValue = 1.0;
+  int _remainingTime = 10;
   Timer? _timer;
-  int _currentQuestionIndex = 0; // Index de la question actuelle
-  int _correctAnswers = 0; // Compteur des bonnes réponses
-  int _incorrectAnswers = 0; // Compteur des mauvaises réponses
-  List<Color> _progressBarColors = []; // Stocke les couleurs (vert pour bonne réponse, rouge pour mauvaise)
-  bool _hasAnswered = false; // Pour savoir si l'utilisateur a répondu à la question
-  List<Map<String, dynamic>> _answeredQuestions = []; // Liste des questions répondues (correct ou incorrect)
-
-  // Liste des 10 questions avec 4 propositions de réponses
-  final List<Map<String, dynamic>> _questions = [
-    {
-      'question': 'What is\nthis thing?',
-      'options': ['Book', 'Pencil', 'Eraser', 'Ruler'],
-      'correctOption': 'Pencil',
-      'icon': Icons.create, // Icône associée à la question
-    },
-    {
-      'question': 'What is\nthis object?',
-      'options': ['Phone', 'Laptop', 'Tablet', 'Monitor'],
-      'correctOption': 'Laptop',
-      'icon': Icons.laptop, // Icône pour une autre question
-    },
-    {
-      'question': 'Find the\ncorrect answer',
-      'options': ['Car', 'Bicycle', 'Motorcycle', 'Truck'],
-      'correctOption': 'Bicycle',
-      'icon': Icons.pedal_bike,
-    },
-    {
-      'question': 'What can you\nuse to write?',
-      'options': ['Eraser', 'Pen', 'Keyboard', 'Monitor'],
-      'correctOption': 'Pen',
-      'icon': Icons.edit,
-    },
-    {
-      'question': 'Which of these\nis an animal?',
-      'options': ['Tree', 'Dog', 'Car', 'House'],
-      'correctOption': 'Dog',
-      'icon': Icons.pets,
-    },
-    {
-      'question': 'What is\nthis thing?',
-      'options': ['Keyboard', 'Mouse', 'Monitor', 'Table'],
-      'correctOption': 'Mouse',
-      'icon': Icons.mouse,
-    },
-    {
-      'question': 'Which one is\na color?',
-      'options': ['Red', 'Dog', 'Car', 'House'],
-      'correctOption': 'Red',
-      'icon': Icons.color_lens,
-    },
-    {
-      'question': 'What do you\nuse to sit?',
-      'options': ['Chair', 'Dog', 'Tree', 'House'],
-      'correctOption': 'Chair',
-      'icon': Icons.chair,
-    },
-    {
-      'question': 'Which one is\nan insect?',
-      'options': ['Butterfly', 'Car', 'House', 'Monitor'],
-      'correctOption': 'Butterfly',
-      'icon': Icons.bug_report,
-    },
-    {
-      'question': 'What is\nthis device?',
-      'options': ['Smartphone', 'Bicycle', 'Car', 'House'],
-      'correctOption': 'Smartphone',
-      'icon': Icons.phone_iphone,
-    },
-  ];
+  int _currentQuestionIndex = 0;
+  int _correctAnswers = 0;
+  int _incorrectAnswers = 0;
+  List<Color> _progressBarColors = [];
+  bool _hasAnswered = false;
+  List<Map<String, dynamic>> _answeredQuestions = [];
+  List<Map<String, dynamic>> _questions = [];
+  bool _isLoading = true;
+  String? _selectedOption;
+  bool _isAnswerCorrect = false;
 
   @override
   void initState() {
     super.initState();
-    startTimer();
+    _getQuestionsFromFirestore();
   }
 
-  // Fonction pour démarrer le timer de 10 secondes
   void startTimer() {
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       setState(() {
@@ -96,36 +37,66 @@ class _QuestionSoloState extends State<QuestionSolo> {
           _remainingTime--;
           _progressValue = _remainingTime / 10.0;
         } else {
-          _registerAnswer(isCorrect: false); // Enregistre une réponse fausse si l'utilisateur n'a pas répondu
+          _registerAnswer(isCorrect: false);
         }
       });
     });
   }
 
-  // Fonction pour passer à la question suivante
+  Future<void> _getQuestionsFromFirestore() async {
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('minijeu')
+          .doc('minijeu1')
+          .collection('questions')
+          .get();
+
+      List<Map<String, dynamic>> loadedQuestions = snapshot.docs.map((doc) {
+        return {
+          'question': doc['question'],
+          'options': List<String>.from(doc['options']),
+          'correctOption': doc['correctAnswer'],
+          'icon': Icons.question_answer,
+        };
+      }).toList();
+
+      loadedQuestions.shuffle();
+      loadedQuestions = loadedQuestions.take(10).toList();
+
+      setState(() {
+        _questions = loadedQuestions;
+        _isLoading = false;
+        startTimer();
+      });
+    } catch (e) {
+      print('Erreur lors du chargement des questions : $e');
+    }
+  }
+
   void _goToNextQuestion() {
-    _timer?.cancel(); // Annule le timer actuel
+    _timer?.cancel();
     if (_currentQuestionIndex < _questions.length - 1) {
       setState(() {
         _currentQuestionIndex++;
-        _remainingTime = 10; // Réinitialise le temps
-        _progressValue = 1.0; // Réinitialise la progression
-        _hasAnswered = false; // L'utilisateur n'a pas encore répondu à cette nouvelle question
-        startTimer(); // Redémarre le timer pour la question suivante
+        _remainingTime = 10;
+        _progressValue = 1.0;
+        _hasAnswered = false;
+        _selectedOption = null;
+        _isAnswerCorrect = false;
+        startTimer();
       });
     } else {
-      // Toutes les questions sont terminées, on redirige vers la page des résultats
       _navigateToResultPage();
     }
   }
 
-  // Fonction pour enregistrer une réponse
   void _registerAnswer({required bool isCorrect}) {
     setState(() {
       _hasAnswered = true;
+      _isAnswerCorrect = isCorrect;
+
       _progressBarColors.add(isCorrect ? Colors.green : Colors.red);
 
-      // Ajoute la question actuelle aux questions répondues
       _answeredQuestions.add(_questions[_currentQuestionIndex]);
 
       if (isCorrect) {
@@ -133,26 +104,27 @@ class _QuestionSoloState extends State<QuestionSolo> {
       } else {
         _incorrectAnswers++;
         if (_incorrectAnswers >= 3) {
-          _navigateToResultPage(); // Rediriger si 3 mauvaises réponses sont atteintes
+          _navigateToResultPage();
         }
       }
 
-      // Après une courte pause, passe à la question suivante ou à la page de résultat
       if (_incorrectAnswers < 3) {
-        Future.delayed(Duration(seconds: 1), _goToNextQuestion);
+        Future.delayed(Duration(seconds: 2), _goToNextQuestion);
       }
     });
   }
 
-  // Quand l'utilisateur sélectionne une option, cette fonction est appelée
   void _answerQuestion(String selectedOption) {
-    if (_hasAnswered) return; // Si l'utilisateur a déjà répondu, ne fait rien
+    if (_hasAnswered) return;
+
+    setState(() {
+      _selectedOption = selectedOption;
+    });
 
     bool isCorrect = selectedOption == _questions[_currentQuestionIndex]['correctOption'];
     _registerAnswer(isCorrect: isCorrect);
   }
 
-  // Rediriger vers la page de résultats avec les questions répondues
   void _navigateToResultPage() {
     _timer?.cancel();
     Navigator.pushReplacement(
@@ -161,8 +133,8 @@ class _QuestionSoloState extends State<QuestionSolo> {
         builder: (context) => ResultPage(
           totalQuestions: _questions.length,
           correctAnswers: _correctAnswers,
-          hasLost: _incorrectAnswers >= 3, // Indique si l'utilisateur a perdu
-          questions: _answeredQuestions, // Passe uniquement les questions répondues
+          hasLost: _incorrectAnswers >= 3,
+          questions: _answeredQuestions,
         ),
       ),
     );
@@ -176,18 +148,26 @@ class _QuestionSoloState extends State<QuestionSolo> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Color(0xFF9F7EFF),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final currentQuestion = _questions[_currentQuestionIndex];
+    final correctOption = currentQuestion['correctOption'];
 
     return Scaffold(
-      backgroundColor: Color(0xFF9F7EFF), // Fond dégradé violet
+      backgroundColor: Color(0xFF9F7EFF),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            _timer?.cancel(); // Annule le timer si on quitte
-            Navigator.pop(context); // Retourne à la page précédente
+            _timer?.cancel();
+            Navigator.pop(context);
           },
         ),
         centerTitle: true,
@@ -205,7 +185,6 @@ class _QuestionSoloState extends State<QuestionSolo> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Barre de progression pour le timer
             Stack(
               alignment: Alignment.center,
               children: [
@@ -214,20 +193,19 @@ class _QuestionSoloState extends State<QuestionSolo> {
                   width: double.infinity,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: Color(0xFF7646FD), // Couleur de fond de la barre
+                    color: Color(0xFF7646FD),
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: FractionallySizedBox(
-                    widthFactor: _progressValue, // Proportion de temps écoulé
+                    widthFactor: _progressValue,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Color(0xFFFF8F51), // Couleur de progression du timer
+                        color: Color(0xFFFF8F51),
                         borderRadius: BorderRadius.circular(24),
                       ),
                     ),
                   ),
                 ),
-                // Timer affiché
                 Text(
                   '$_remainingTime s',
                   style: TextStyle(
@@ -238,10 +216,8 @@ class _QuestionSoloState extends State<QuestionSolo> {
                 ),
               ],
             ),
-
-            // Image et Question avec carré blanc
             Container(
-              width: 327, // Largeur pour s'ajuster à l'écran
+              width: 327,
               padding: EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -249,26 +225,23 @@ class _QuestionSoloState extends State<QuestionSolo> {
               ),
               child: Column(
                 children: [
-                  // Image de l'objet
                   Container(
                     width: 150,
-                    height: 150, // Ajuster la taille de l'image
+                    height: 150,
                     decoration: BoxDecoration(
                       color: Color(0xFFFFB084),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(
                       child: Icon(
-                        currentQuestion['icon'], // Icône dynamique pour chaque question
+                        currentQuestion['icon'],
                         size: 64,
                         color: Color(0xFF280A82),
                       ),
                     ),
                   ),
                   SizedBox(height: 24),
-
-                  // Texte de la question
-                  Text(
+                  AutoSizeText(
                     currentQuestion['question'],
                     textAlign: TextAlign.center,
                     style: TextStyle(
@@ -276,22 +249,19 @@ class _QuestionSoloState extends State<QuestionSolo> {
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF280A82),
                     ),
+                    maxLines: 3,
+                    minFontSize: 14,
                   ),
                 ],
               ),
             ),
             SizedBox(height: 40),
-
-            // Affichage des options de réponse (4 options)
             for (String option in currentQuestion['options'])
               Padding(
                 padding: const EdgeInsets.only(bottom: 16.0),
-                child: _buildAnswerButton(context, option),
+                child: _buildAnswerButton(context, option, correctOption),
               ),
-
             SizedBox(height: 20),
-
-            // Barre de progression des réponses (rouge pour mauvaise, vert pour bonne)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
@@ -303,7 +273,7 @@ class _QuestionSoloState extends State<QuestionSolo> {
                     decoration: BoxDecoration(
                       color: index < _progressBarColors.length
                           ? _progressBarColors[index]
-                          : Colors.grey.withOpacity(0.2), // Gris si pas encore répondu
+                          : Colors.grey.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(5),
                     ),
                   ),
@@ -316,37 +286,37 @@ class _QuestionSoloState extends State<QuestionSolo> {
     );
   }
 
-  // Construction des boutons de réponse
-  Widget _buildAnswerButton(BuildContext context, String text) {
-    bool isSelected = _hasAnswered && text == _questions[_currentQuestionIndex]['correctOption'];
+  Widget _buildAnswerButton(BuildContext context, String text, String correctOption) {
+    bool isCorrect = text == correctOption;
+    bool isSelected = _selectedOption != null && text == _selectedOption;
+
+    Color buttonColor;
+    if (_hasAnswered) {
+      if (isSelected && isCorrect) {
+        buttonColor = Colors.green;
+      } else if (isSelected && !isCorrect) {
+        buttonColor = Colors.red;
+      } else if (isCorrect) {
+        buttonColor = Colors.green;
+      } else {
+        buttonColor = Colors.transparent;
+      }
+    } else {
+      buttonColor = Colors.transparent;
+    }
 
     return GestureDetector(
-      onTap: () => _answerQuestion(text), // Réagir au clic
+      onTap: () => _answerQuestion(text),
       child: Container(
         width: double.infinity,
         height: 64,
         decoration: BoxDecoration(
-          color: isSelected ? Color(0xFFFF8F51) : Colors.transparent,
+          color: buttonColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? Colors.transparent : Colors.white.withOpacity(0.4),
+            color: Colors.white.withOpacity(0.4),
             width: 2,
           ),
-          boxShadow: isSelected
-              ? [
-            BoxShadow(
-              color: Color(0x663510A5),
-              blurRadius: 32,
-              offset: Offset(0, 16),
-            )
-          ]
-              : [
-            BoxShadow(
-              color: Color(0x4C572FFF),
-              blurRadius: 20,
-              offset: Offset(0, 8),
-            )
-          ],
         ),
         child: Center(
           child: Text(

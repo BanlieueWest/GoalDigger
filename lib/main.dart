@@ -6,6 +6,8 @@ import 'page3.dart';
 import 'page4.dart';
 import 'page5.dart';
 import 'profile.dart';
+import 'questions_solo.dart';
+import 'select_country_page.dart';
 import 'login.dart'; // Ajout de la page de connexion
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -32,7 +34,9 @@ class _MyAppState extends State<MyApp> {
       routes: {
         '/home': (context) => MainPage(),
         '/login': (context) => LoginPage(),
+        '/quizSolo': (context) => QuestionSolo(), // Ajoute la route vers la page de quiz
         '/signup': (context) => SignUpPage(), // Assure-toi que la page signup e
+        '/selectCountry': (context) => SelectCountryPage(), // Ajoute la route vers la sélection de pays
       },
       home: AuthWrapper(), // Vérifie si l'utilisateur est connecté
     );

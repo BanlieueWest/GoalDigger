@@ -1,7 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class Page1 extends StatelessWidget {
+class Page1 extends StatefulWidget {
+  @override
+  _Page1State createState() => _Page1State();
+}
+
+class _Page1State extends State<Page1> {
+  final _auth = FirebaseAuth.instance;
+  String _username = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUsername();
+  }
+
+  Future<void> _fetchUsername() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      setState(() {
+        _username = userDoc.data()?['username'] ?? 'Utilisateur'; // Par défaut si pas de pseudo
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -13,18 +38,15 @@ class Page1 extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              'Bienvenue sur la Page 1',
+              'Bonjour $_username!', // Affiche le pseudo de l'utilisateur
               style: TextStyle(fontSize: 24),
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () async {
-                // Déconnexion de l'utilisateur
-                await FirebaseAuth.instance.signOut();
-                // Redirection vers la page de connexion
-                Navigator.of(context).pushReplacementNamed('/login');
+              onPressed: () {
+                Navigator.of(context).pushNamed('/quizSolo');
               },
-              child: Text('Déconnexion'),
+              child: Text('Jeu Solo'),
             ),
           ],
         ),
