@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignUpPage extends StatefulWidget {
   @override
@@ -8,6 +9,7 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPageState extends State<SignUpPage> {
   final _auth = FirebaseAuth.instance;
+  final _firestore = FirebaseFirestore.instance;
   String _username = '';
   String _email = '';
   String _password = '';
@@ -15,8 +17,26 @@ class _SignUpPageState extends State<SignUpPage> {
 
   Future<void> _signUp() async {
     try {
-      await _auth.createUserWithEmailAndPassword(email: _email, password: _password);
-      Navigator.of(context).pushReplacementNamed('/home'); // Rediriger vers la page principale
+      // Créer un utilisateur avec FirebaseAuth
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: _email,
+        password: _password,
+      );
+
+      // Récupérer l'UID de l'utilisateur créé
+      User? user = userCredential.user;
+
+      if (user != null) {
+        // Enregistrer le `username` et d'autres informations dans Firestore
+        await _firestore.collection('users').doc(user.uid).set({
+          'username': _username,
+          'email': _email,
+          // Vous pouvez ajouter d'autres champs ici si nécessaire
+        });
+
+        // Rediriger vers la page principale
+        Navigator.of(context).pushReplacementNamed('/home', arguments: {'username': _username});
+      }
     } catch (e) {
       setState(() {
         _errorMessage = e.toString();
@@ -109,7 +129,7 @@ class _SignUpPageState extends State<SignUpPage> {
             _buildSocialButton(
               text: 'Signup with Facebook',
               color: Colors.blue,
-              icon: Icons.facebook, // Utilisation de l'icône Facebook
+              icon: Icons.facebook,
               onPressed: () {
                 // Implémente la connexion avec Facebook
               },
@@ -119,7 +139,7 @@ class _SignUpPageState extends State<SignUpPage> {
               text: 'Signup with Google',
               color: Colors.white,
               textColor: Colors.black,
-              imagePath: 'assets/images/google_logo.png', // Chemin de l'image Google
+              imagePath: 'assets/images/google_logo.png',
               onPressed: () {
                 // Implémente la connexion avec Google
               },

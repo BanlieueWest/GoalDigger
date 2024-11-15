@@ -8,6 +8,7 @@ import 'page5.dart';
 import 'profile.dart';
 import 'questions_solo.dart';
 import 'select_country_page.dart';
+import 'SuppressionCompte.dart'; // Importez le fichier de suppression de compte
 import 'login.dart'; // Ajout de la page de connexion
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -37,6 +38,7 @@ class _MyAppState extends State<MyApp> {
         '/quizSolo': (context) => QuestionSolo(), // Ajoute la route vers la page de quiz
         '/signup': (context) => SignUpPage(), // Assure-toi que la page signup e
         '/selectCountry': (context) => SelectCountryPage(), // Ajoute la route vers la sélection de pays
+        '/suppressionCompte': (context) => SuppressionComptePage(), // Ajoutez cette ligne
       },
       home: AuthWrapper(), // Vérifie si l'utilisateur est connecté
     );

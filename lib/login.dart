@@ -9,25 +9,39 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _auth = FirebaseAuth.instance;
+  String _username = ''; // Nouveau champ pour le username
   String _email = '';
   String _password = '';
   String _errorMessage = '';
 
-  // Fonction de connexion avec vérification du pays et du pseudo
   Future<void> _login() async {
     try {
-      // Connexion de l'utilisateur
       await _auth.signInWithEmailAndPassword(email: _email, password: _password);
       final user = _auth.currentUser;
-
-      // Récupération des informations de l'utilisateur dans Firestore
       final userDoc = await FirebaseFirestore.instance.collection('users').doc(user?.uid).get();
 
-      // Vérifie si le pays et le pseudo sont déjà sélectionnés
-      if (userDoc.exists && userDoc.data()?['country'] != null && userDoc.data()?['username'] != null) {
-        Navigator.of(context).pushReplacementNamed('/home'); // Redirige vers l'accueil
+      // Vérifie si l'utilisateur a déjà sélectionné un pays
+      if (userDoc.exists) {
+        // Récupération du username depuis Firestore
+        _username = userDoc.data()?['username'] ?? 'User';
+        // Vérification de la sélection du pays
+        if (userDoc.data()?['country'] != null) {
+          // Redirection vers l'accueil avec le username en argument
+          Navigator.of(context).pushReplacementNamed(
+            '/home',
+            arguments: {'username': _username},
+          );
+        } else {
+          // Redirection vers la sélection de pays avec le username en argument
+          Navigator.of(context).pushReplacementNamed(
+            '/selectCountry',
+            arguments: {'username': _username},
+          );
+        }
       } else {
-        Navigator.of(context).pushReplacementNamed('/selectCountry'); // Redirige vers la sélection de pays
+        setState(() {
+          _errorMessage = "User data not found.";
+        });
       }
     } catch (e) {
       setState(() {
@@ -41,12 +55,12 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
-          child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                  SizedBox(height: 80),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(height: 80),
               Text(
                 "Hi, Welcome Back! 👋",
                 style: TextStyle(
@@ -64,6 +78,19 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               SizedBox(height: 40),
+
+              // Champ pour le username (si nécessaire)
+              _buildTextField(
+                label: 'Username',
+                placeholder: 'Enter your username',
+                obscureText: false,
+                onChanged: (value) {
+                  _username = value;
+                },
+              ),
+              SizedBox(height: 16),
+
+              // Champ pour l'email
               _buildTextField(
                 label: 'Email',
                 placeholder: 'example@gmail.com',
@@ -73,6 +100,8 @@ class _LoginPageState extends State<LoginPage> {
                 },
               ),
               SizedBox(height: 16),
+
+              // Champ pour le mot de passe
               _buildTextField(
                 label: 'Password',
                 placeholder: 'Enter Your Password',
@@ -82,6 +111,7 @@ class _LoginPageState extends State<LoginPage> {
                 },
               ),
               SizedBox(height: 10),
+
               GestureDetector(
                 onTap: () {
                   // Implémente la redirection vers la page "Forgot Password"
@@ -97,59 +127,59 @@ class _LoginPageState extends State<LoginPage> {
               SizedBox(height: 20),
               GestureDetector(
                 onTap: _login,
-                child: LoginButton(), // Utilisation de ton widget personnalisé pour le bouton
+                child: LoginButton(), // Utilisation de ton nouveau widget
               ),
               if (_errorMessage.isNotEmpty)
-          Padding(
-          padding: const EdgeInsets.all(8.0),
-      child: Text(
-        _errorMessage,
-        style: TextStyle(color: Colors.red),
-      ),
-    ),
-    SizedBox(height: 20),
-    Text(
-    "Or With",
-    style: TextStyle(
-    color: Colors.black,
-    fontSize: 14,
-    ),
-    ),
-    SizedBox(height: 10),
-    _buildSocialButton(
-    text: 'Login with Facebook',
-    color: Colors.blue,
-    onPressed: () {
-    // Implémente la connexion avec Facebook
-    },
-    ),
-    SizedBox(height: 10),
-    _buildSocialButton(
-    text: 'Login with Google',
-    color: Colors.white,
-    textColor: Colors.black,
-      onPressed: () {
-        // Implémente la connexion avec Google
-      },
-    ),
-                    SizedBox(height: 20),
-                    Text(
-                      "Don't have an account?",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 14,
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).pushNamed('/signup');
-                      },
-                      child: Text('Sign Up'),
-                    ),
-                  ],
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    _errorMessage,
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              SizedBox(height: 20),
+              Text(
+                "Or With",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 14,
+                ),
               ),
+              SizedBox(height: 10),
+              _buildSocialButton(
+                text: 'Login with Facebook',
+                color: Colors.blue,
+                onPressed: () {
+                  // Implémente la connexion avec Facebook
+                },
+              ),
+              SizedBox(height: 10),
+              _buildSocialButton(
+                text: 'Login with Google',
+                color: Colors.white,
+                textColor: Colors.black,
+                onPressed: () {
+                  // Implémente la connexion avec Google
+                },
+              ),
+              SizedBox(height: 20),
+              Text(
+                "Don't have an account?",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 14,
+                ),
+              ),
+              SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/signup');
+                },
+                child: Text('Sign Up'),
+              ),
+            ],
           ),
+        ),
       ),
     );
   }
@@ -270,4 +300,3 @@ class LoginButton extends StatelessWidget {
     );
   }
 }
-

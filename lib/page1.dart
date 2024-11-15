@@ -27,6 +27,10 @@ class _Page1State extends State<Page1> {
     }
   }
 
+  void _navigateToDeleteAccount() {
+    Navigator.of(context).pushNamed('/suppressionCompte');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,6 +51,14 @@ class _Page1State extends State<Page1> {
                 Navigator.of(context).pushNamed('/quizSolo');
               },
               child: Text('Jeu Solo'),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _navigateToDeleteAccount,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red, // Bouton rouge pour suppression
+              ),
+              child: Text('Supprimer mon compte'),
             ),
           ],
         ),
